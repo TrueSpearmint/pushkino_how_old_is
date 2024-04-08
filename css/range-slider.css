@@ -1,0 +1,108 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@600&display=swap");
+.range {
+  box-sizing: border-box; /* устанавливает модель упаковки box-sizing для всех элементов класса range, то есть, чтобы ширина и высота блоков учитывала отступы в них*/
+  display: grid; /* устанавливает родительскому контейнеру отображение в виде сетки */
+  text-align: center; /* выравнивает текст по центру */
+  height: 80px; /* высота блока range */
+  width: 100vw; /* ширина блока range на всю ширину экрана*/
+  background: #ffffff; /* фоновый цвет блока range */
+  border-radius: 10px; /* закрушление углов блока range */
+  padding: 0 45px 0 45px; /* отступ от краёв блока range до элементов внутри: сверху, слева, снизу, справа */
+  box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1); /* тень от блока range,  */
+  /* 2px - смещение по горизонтали (расстояние от тени до элемента вправо). 4px - смещение по вертикали (расстояние от тени до элемента вниз). 8px - размытие тени */
+  font-family: "Poppins", sans-serif; /* устанавливает шрифт по умолчанию для всего текста класса range */
+}
+.slider {
+  display: flex; /* устанавливает отображение элементов внутри блока в виде гибкого контейнера */
+  align-items: center; /* выравнивает элементы по вертикали по центру блока */
+  justify-content: center; /* выравнивает элементы по горизонтали по центру блока */
+  height: 100%; /* устанавливает высоту блока на 100% высоты его родительского контейнера */
+  position: relative; /* устанавливает позицию элемента как относительную */
+}
+.slider .value {
+  /* придание общих стилей значениям слева и справа от слайдера */
+  position: absolute;
+  font-size: 18px;
+  color: #ffffff;
+  font-weight: 600;
+}
+.slider .value.left {
+  left: -25px; /* отступ надписи слева от слайдера */
+}
+.slider .value.right {
+  right: -25px; /* отступ надписи справа от слайдера */
+}
+input[type="range"] {
+  /* Изменение двух слайдеров, так чтобы от них остались только точки*/
+  -webkit-appearance: none; /* удаляет стандартные стили для элемента в браузерах, использующих движок WebKit (Safari и Chrome) */
+  -moz-appearance: none; /* удаляет стандартные стили для элемента в браузерах, использующих движок Gecko (Firefox) */
+  appearance: none;
+  width: calc(
+    98% - 40px
+  ); /* такая запись позволяет на широких экранах разместить линию на 98% экрана, при этом на маленьких (телефонах) в любом случае отсупить 40px*/
+  outline: none;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  background-color: transparent;
+  pointer-events: none;
+}
+.slider-track {
+  /* Отображение полоски слайдера, по сути просто линии */
+  width: calc(
+    98% - 40px
+  ); /* такая запись позволяет на широких экранах разместить линию на 98% экрана, при этом на маленьких (телефонах) в любом случае отсупить 40px*/
+  height: 5px;
+  background-color: #3264fe;
+  position: absolute;
+  margin: auto;
+  top: 0;
+  bottom: 0;
+  border-radius: 5px;
+}
+/* Настройки для конкретных движков браузеров, чтобы не использовались их стандартные настройки */
+input[type="range"]::-webkit-slider-runnable-track {
+  -webkit-appearance: none;
+  height: 5px;
+}
+input[type="range"]::-moz-range-track {
+  -moz-appearance: none;
+  height: 5px;
+}
+input[type="range"]::-ms-track {
+  appearance: none;
+  height: 5px;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  height: 1.7em;
+  width: 1.7em;
+  background-color: #3264fe;
+  cursor: pointer;
+  margin-top: -9px;
+  pointer-events: auto;
+  border-radius: 50%;
+}
+input[type="range"]::-moz-range-thumb {
+  -webkit-appearance: none;
+  height: 1.7em;
+  width: 1.7em;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: #3264fe;
+  pointer-events: auto;
+}
+input[type="range"]::-ms-thumb {
+  appearance: none;
+  height: 1.7em;
+  width: 1.7em;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: #3264fe;
+  pointer-events: auto;
+}
+input[type="range"]:active::-webkit-slider-thumb {
+  background-color: #ffffff;
+  border: 3px solid #3264fe;
+}

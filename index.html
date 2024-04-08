@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Карта возраста домов Пушкино</title>
+    <link href="favicon/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+    <!-- Краткое описание странцы -->
+    <meta name="description" content="Карта возраста домов Пушкино" />
+    <!-- Ключевые слова страницы -->
+    <meta
+      name="keywords"
+      content="Возраст домов Пушкино, Возраст Пушкино, Пушкино, Сколько лет дому в Пушкино, Год постройки дома в Пушкино"
+    />
+    <!--  Автор страницы -->
+    <meta name="Author" content="Ilya Soskov" />
+    <!-- Адрес автора -->
+    <meta name="Address" content="https://vk.com/ilyyuusha" />
+    <!-- локализация сайта, для русскоязычного сайта ru_RU -->
+    <meta property="og:locale" content="ru_RU" />
+    <!-- тип контента, по умолчанию используется article -->
+    <meta property="og:type" content="article" />
+    <!-- заголовок страницы, который будет выводится в записи социальной сети -->
+    <meta property="og:title" content="Карта возраста домов Пушкино" />
+    <!-- описание страницы -->
+    <meta property="og:description" content="Карта домов города Пушкино с их возрастом" />
+    <!-- ссылка на текущую страницу -->
+    <meta property="og:url" content="https://truespearmint.github.io/how-old-is-pushkino/" />
+    <!-- название сайта -->
+    <meta property="og:site_name" content="Карта возраста домов Пушкино" />
+
+    <link href="css/how-old-is-pushkino.css" rel="stylesheet" />
+    <link href="css/range-slider.css" rel="stylesheet" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.1.2/mapbox-gl.js"></script>
+  </head>
+  <body>
+    <!-- Блок карты -->
+    <div id="map"></div>
+    <!-- Блок слайдера -->
+    <div class="range">
+      <div class="slider">
+        <div class="value left">1694</div>
+        <div class="slider-track"></div>
+        <input type="range" min="1694" max="2024" value="1694" id="slider-1" oninput="slideOne()" />
+        <input type="range" min="1694" max="2024" value="2024" id="slider-2" oninput="slideTwo()" />
+        <div class="value right">2024</div>
+      </div>
+    </div>
+    <!-- Блок легенды -->
+    <div class="map-overlay" id="legend"></div>
+    <!-- Блок информации о строении -->
+    <div id="popupData"><p>Нажмите на строение для получения информации о нём</p></div>
+    <!-- Панель атрибутов -->
+    <div id="attribution-block">
+      <span
+        class="tooltip-2"
+        title="Лучший способ: добавить новое здание, изменить геометрию уже имеющегося здания, указать возраст дома - это внести данные в OpenStreetMap. Если вы совершили значительные правки и хотите, чтобы они отобразились на этой карте - то сообщите об этом через форму обратной связи и прикрепите ссылки на пакеты правок"
+        >Как добавить или изменить данные?</span
+      >
+      |
+      <a href="https://forms.yandex.ru/u/660c18d3f47e7319d32a7840" target="_blank"
+        >Форма обратной связи</a
+      >
+      | <a href="https://github.com/TrueSpearmint/pushkino_how_old_is" target="_blank">GitHub</a> |
+      Источники: <a href="https://rosreestr.gov.ru" target="_blank">Росреестр</a>,
+      <a href="https://opendata.mkrf.ru" target="_blank">Министерство культуры</a>,
+      <a href="https://фрт.рф" target="_blank">Фонд развития территорий</a>,
+      <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>,
+      <a href="https://www.wikidata.org" target="_blank">Wikidata</a>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+      /// Блок карты и легенды
+      mapboxgl.accessToken =
+        "pk.eyJ1IjoidHJ1ZXNwZWFybWludCIsImEiOiJjbHVpbDl1bXcwNTg1MmltdjI2NmpsNXdpIn0.hTURiBYjIAijbKZnfQPdrg";
+      const map = new mapboxgl.Map({
+        container: "map",
+        center: [37.847164, 56.011318],
+        style: "mapbox://styles/truespearmint/clu5fl7ar00jz01praad30lra",
+        zoom: 12,
+        maxBounds: [
+          [35.579062, 54.461946],
+          [39.876909, 57.567873],
+        ],
+      });
+
+      // Получаем элемент панели атрибутов и удаляем его
+      var attributionControl = document.querySelector(".mapboxgl-ctrl-attrib");
+      attributionControl.parentNode.removeChild(attributionControl);
+      // Создаём новую панель атрибутов, но с дополнительными данными
+      map.addControl(
+        new mapboxgl.AttributionControl({
+          customAttribution: document.getElementById("attribution-block").innerHTML,
+        })
+      );
+
+      let filterYearOne = [">=", ["number", ["get", "year_built_processed"]], 1694];
+      let filterYearTwo = ["<=", ["number", ["get", "year_built_processed"]], 2024];
+      let filterNotEmpty = ["!=", ["typeof", ["get", "year_built_processed"]], "null"];
+      let filterNoData = ["==", ["typeof", ["get", "year_built_processed"]], "null"];
+
+      map.on("load", function () {
+        map.addSource("buildings_pushkino_how_old", {
+          // может быть любое имя
+          type: "vector", // Тип источника данных вашего слоя (может быть vector, raster, geojson и т.д.)
+          url: "mapbox://truespearmint.civtg35e", // Tileset ID из Mapbox Studio Tilesets
+        });
+
+        map.addLayer({
+          id: "buildings_pushkino_how_old_id", // Уникальный идентификатор вашего слоя, можно назначить любым
+          type: "fill-extrusion", // Тип вашего слоя, например, fill, line, symbol и т.д.
+          source: "buildings_pushkino_how_old",
+          "source-layer": "buildings_pushkino_how_old-65ietx", // Имя тайлсета. То как называются данные после загрузки
+          layout: { visibility: "visible" },
+          filter: ["all", filterNotEmpty, filterYearOne, filterYearTwo],
+          paint: {
+            "fill-extrusion-color": [
+              // изменяем цвет по свойству
+              "step",
+              ["coalesce", ["get", "year_built_processed"], 0], // используем coalesce для замены null на 0
+              "#303030",
+              1694,
+              "#a52a2a",
+              1850,
+              "#D1673E",
+              1917,
+              "#F3972E",
+              1950,
+              "#CBBD63",
+              1975,
+              "#507A4D",
+              2000,
+              "#035656",
+              2010,
+              "#076F9E",
+              2020,
+              "#9457EB",
+            ],
+            "fill-extrusion-height": [
+              "match",
+              ["typeof", ["get", "floors_processed"]],
+              "number",
+              ["*", ["get", "floors_processed"], 3], // средняя высота этажа - 3 метра
+              0, // Если значение "floors_processed" не является числом (null или неопределено), установить высоту в 0
+            ],
+          },
+        });
+
+        map.addLayer({
+          id: "buildings_pushkino_how_old_id_null", // Уникальный идентификатор вашего слоя, можно назначить любым
+          type: "fill-extrusion", // Тип вашего слоя, например, fill, line, symbol и т.д.
+          source: "buildings_pushkino_how_old",
+          "source-layer": "buildings_pushkino_how_old-65ietx", // Имя тайлсета. То как называются данные после загрузки
+          layout: { visibility: "visible" },
+          filter: ["all", filterNoData],
+          paint: {
+            "fill-extrusion-color": "#303030",
+            "fill-extrusion-height": [
+              "match",
+              ["typeof", ["get", "floors_processed"]],
+              "number",
+              ["*", ["get", "floors_processed"], 3], // средняя высота этажа - 3 метра
+              0, // Если значение "floors_processed" не является числом (null или неопределено), установить высоту в 0
+            ],
+          },
+        });
+
+        // Функция для создания легенды на основе переданных данных о слоях и цветах
+        function createLegend(steps, colors) {
+          const legend = document.getElementById("legend"); // Получаем ссылку на элемент легенды
+          legend.innerHTML = ""; // Очищаем легенду перед добавлением новых значений
+          // Для каждого шага и цвета создаем соответствующий элемент легенды
+          steps.forEach((layer, i) => {
+            const color = colors[i];
+            const item = document.createElement("div");
+            const key = document.createElement("span");
+            key.className = "legend-key";
+            key.style.backgroundColor = color;
+            const value = document.createElement("span");
+            value.innerHTML = `${layer}`;
+            item.appendChild(key);
+            item.appendChild(value);
+            legend.appendChild(item);
+          });
+        }
+
+        // Массивы ступеней и значений для легенды
+        const steps = [
+          "Нет данных",
+          "1694 - 1849",
+          "1850 - 1916",
+          "1917 - 1949",
+          "1950 - 1974",
+          "1975 - 1999",
+          "2000 - 2009",
+          "2010 - 2019",
+          "2020 и после",
+        ];
+        const colors = [
+          "#303030",
+          "#A52A2A",
+          "#D1673E",
+          "#F3972E",
+          "#CBBD63",
+          "#507A4D",
+          "#035656",
+          "#076F9E",
+          "#9457EB",
+        ];
+
+        // Создаем легенду
+        createLegend(steps, colors);
+
+        // Наведение и получение информации по клику со зданий с возрастом
+        // Change the cursor to a pointer when the mouse is over the places layer.
+        map.on("mouseenter", "buildings_pushkino_how_old_id", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.on("mouseleave", "buildings_pushkino_how_old_id", () => {
+          map.getCanvas().style.cursor = "";
+        });
+
+        map.on("click", "buildings_pushkino_how_old_id", (e) => {
+          // Copy coordinates array.
+          const address_processed_value = e.features[0].properties.address_processed;
+          const name_processed_value = e.features[0].properties.name_processed;
+          const year_built_processed_value = e.features[0].properties.year_built_processed;
+          const year_built_processed_source_value =
+            e.features[0].properties.year_built_processed_source;
+          const floors_processed_value = e.features[0].properties.floors_processed;
+          const floors_processed_source_value = e.features[0].properties.floors_processed_source;
+          const minculture_data_general_typologies_and_category_value =
+            e.features[0].properties.minculture_data_general_typologies_and_category;
+          const wikidata_item_value = e.features[0].properties.wikidata_item;
+          const wikidata_photo_value = e.features[0].properties.wikidata_photo;
+          const wikidata_wikipedia_url_value = e.features[0].properties.wikidata_wikipedia_url;
+          const wikidata_official_website_value =
+            e.features[0].properties.wikidata_official_website;
+
+          // Получаем ссылку на элемент, в который будем выводить данные
+          const popupDataElement = document.getElementById("popupData");
+
+          // Функция для обновления данных в элементе
+          function updatePopupData(data) {
+            popupDataElement.innerHTML = data;
+          }
+
+          // Переменная для хранения информации о строении
+          let buildingData = "";
+
+          if (address_processed_value) {
+            // проверяем, есть ли адрес, если да, то выводим его
+            buildingData += `<strong>Адрес:</strong> <span>${address_processed_value}</span><br>`;
+          }
+          if (name_processed_value) {
+            buildingData += `<strong>Имя:</strong> <span>${name_processed_value}</span><br>`;
+          }
+          if (wikidata_photo_value) {
+            buildingData += `<strong>Фото:</strong><br>`;
+            buildingData += `<img src="${wikidata_photo_value}" alt="Фото здания"><br>`;
+          }
+          if (year_built_processed_value) {
+            buildingData += `<strong>Год постройки:</strong> <span>${year_built_processed_value}</span> <span class="tooltip" title="Источник: ${year_built_processed_source_value}">i</span><br>`;
+          }
+          if (floors_processed_value) {
+            buildingData += `<strong>Количество этажей:</strong> <span>${floors_processed_value}</span> <span class="tooltip" title="Источник: ${floors_processed_source_value}">i</span> <br>`;
+          }
+          if (minculture_data_general_typologies_and_category_value) {
+            buildingData += `<strong>Культурный статус:</strong> <span>${minculture_data_general_typologies_and_category_value}</span><br>`;
+          }
+          if (wikidata_item_value) {
+            buildingData += `<strong><a href="${wikidata_item_value}" target="_blank">Ссылка на Wikidata</a></strong><br>`;
+          }
+          if (wikidata_wikipedia_url_value) {
+            buildingData += `<strong><a href="${wikidata_wikipedia_url_value}" target="_blank">Ссылка на Wikipedia</a></strong><br>`;
+          }
+          if (wikidata_official_website_value) {
+            buildingData += `<strong><a href="${wikidata_official_website_value}" target="_blank">Официальный сайт</a></strong><br>`;
+          }
+
+          updatePopupData(buildingData);
+
+          // Показать tooltip при клике на элементе с классом tooltip
+          document.querySelectorAll(".tooltip").forEach(function (element) {
+            element.addEventListener("click", function () {
+              // Переключаем класс для отображения/скрытия tooltip
+              this.classList.toggle("show-tooltip");
+            });
+          });
+        });
+
+        // Наведение и получение информации по клику со зданий без возраста
+        // Change the cursor to a pointer when the mouse is over the places layer.
+        map.on("mouseenter", "buildings_pushkino_how_old_id_null", () => {
+          map.getCanvas().style.cursor = "pointer";
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.on("mouseleave", "buildings_pushkino_how_old_id_null", () => {
+          map.getCanvas().style.cursor = "";
+        });
+
+        map.on("click", "buildings_pushkino_how_old_id_null", (e) => {
+          // Copy coordinates array.
+          const address_processed_value = e.features[0].properties.address_processed;
+          const floors_processed_value = e.features[0].properties.floors_processed;
+          const floors_processed_source_value = e.features[0].properties.floors_processed_source;
+
+          // Получаем ссылку на элемент, в который будем выводить данные
+          const popupDataElement = document.getElementById("popupData");
+
+          // Функция для обновления данных в элементе
+          function updatePopupData(data) {
+            popupDataElement.innerHTML = data;
+          }
+
+          // Переменная для хранения информации о строении
+          let buildingData = "";
+
+          if (address_processed_value) {
+            // проверяем, есть ли адрес, если да, то выводим его
+            buildingData += `<strong>Адрес:</strong> <span>${address_processed_value}</span><br>`;
+          }
+          if (floors_processed_value) {
+            buildingData += `<strong>Количество этажей:</strong> <span>${floors_processed_value}</span> <span class="tooltip" title="Источник: ${floors_processed_source_value}">i</span> <br>`;
+          }
+
+          updatePopupData(buildingData);
+
+          // Показать tooltip при клике на элементе с классом tooltip
+          document.querySelectorAll(".tooltip").forEach(function (element) {
+            element.addEventListener("click", function () {
+              // Переключаем класс для отображения/скрытия tooltip
+              this.classList.toggle("show-tooltip");
+            });
+          });
+        });
+
+        // Показать tooltip при клике на элементе с классом tooltip-2
+        document.querySelectorAll(".tooltip-2").forEach(function (element) {
+          element.addEventListener("click", function () {
+            // Переключаем класс для отображения/скрытия tooltip
+            this.classList.toggle("show-tooltip");
+          });
+        });
+      });
+    </script>
+    <!-- Слайдер -->
+    <script src="js/range-slider.js"></script>
+  </body>
+</html>

@@ -1,0 +1,132 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@500..600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=B612+Mono&display=swap");
+body {
+  margin: 0;
+  padding: 0;
+}
+
+/* Стили карты */
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+/* Стили блока легенды */
+.map-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  margin-right: 10px;
+  margin-bottom: 20px;
+  overflow: auto;
+  border-radius: 3px;
+  font-family: "B612 Mono", monospace;
+  font-weight: 400;
+  font-style: normal;
+  font-size: small;
+}
+#legend {
+  padding: 10px;
+  line-height: 18px;
+  height: 165px;
+  width: 115px;
+  background-color: rgba(27, 33, 39, 0.8);
+  border: 1px solid #1b2127;
+  color: #ffffff;
+  text-align: left; /* выравнивает текст по центру */
+}
+.legend-key {
+  display: inline-block;
+  border-radius: 20%;
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  vertical-align: sub; /* добавляем вертикальное выравнивание по центру */
+}
+#legend > div:first-child {
+  text-align: center; /* выравнивает текст по центру */
+}
+@media screen and (max-width: 400px) {
+  #legend {
+    width: 118px;
+  }
+  #legend > div:first-child {
+    margin-left: -6px; /* выравнивает текст по центру */
+  }
+}
+
+#legend > div:first-child {
+  text-align: center; /* выравнивает текст по центру */
+}
+
+/* Стили блока информации и строении */
+#popupData {
+  position: fixed;
+  top: 70px;
+  left: 10px;
+  background-color: rgba(27, 33, 39, 0.8);
+  padding: 10px;
+  border: 1px solid #1b2127;
+  border-radius: 5px;
+  z-index: 1;
+  min-width: 335px;
+  min-height: 30px;
+  max-width: 335px;
+  max-height: 300px;
+  color: #ffffff;
+  line-height: 2;
+  font-family: "Montserrat", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  font-size: small;
+}
+#popupData strong {
+  font-weight: 600; /* Semibold */
+}
+#popupData span {
+  font-weight: 500; /* Medium */
+}
+#popupData a {
+  color: white; /* цвет текста */
+  text-decoration: none; /* убрать подчёркивание */
+}
+#popupData img {
+  max-width: 200px;
+  max-height: 150px;
+}
+
+/* Стили знака вопроса о данных */
+.tooltip {
+  cursor: help; /* изменение курсора при наведении */
+  margin-left: 10px; /* отступ от значения переменной */
+  font-weight: bold;
+  color: white;
+}
+/* Стили для панели атрибутов карты */
+.tooltip-2 {
+  cursor: help;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+}
+.tooltip::before,
+.tooltip-2::before {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px;
+  background-color: black;
+  color: white;
+  border-radius: 3px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+.tooltip.show-tooltip::before,
+.tooltip-2.show-tooltip::before {
+  opacity: 1;
+  visibility: visible;
+}
