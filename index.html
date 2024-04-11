@@ -12,21 +12,21 @@
       name="keywords"
       content="Возраст домов Пушкино, Возраст Пушкино, Пушкино, Сколько лет дому в Пушкино, Год постройки дома в Пушкино"
     />
-    <!--  Автор страницы -->
+    <!-- Автор страницы -->
     <meta name="Author" content="Ilya Soskov" />
     <!-- Адрес автора -->
     <meta name="Address" content="https://vk.com/ilyyuusha" />
-    <!-- локализация сайта, для русскоязычного сайта ru_RU -->
+    <!-- Локализация сайта, для русскоязычного сайта ru_RU -->
     <meta property="og:locale" content="ru_RU" />
-    <!-- тип контента, по умолчанию используется article -->
+    <!-- Тип контента, по умолчанию используется article -->
     <meta property="og:type" content="article" />
-    <!-- заголовок страницы, который будет выводится в записи социальной сети -->
+    <!-- Заголовок страницы, который будет выводится в записи социальной сети -->
     <meta property="og:title" content="Карта возраста домов Пушкино" />
-    <!-- описание страницы -->
+    <!-- Описание страницы -->
     <meta property="og:description" content="Карта домов города Пушкино с их возрастом" />
-    <!-- ссылка на текущую страницу -->
+    <!-- Ссылка на текущую страницу -->
     <meta property="og:url" content="https://truespearmint.github.io/how-old-is-pushkino/" />
-    <!-- название сайта -->
+    <!-- Название сайта -->
     <meta property="og:site_name" content="Карта возраста домов Пушкино" />
 
     <link href="css/how-old-is-pushkino.css" rel="stylesheet" />
@@ -50,7 +50,9 @@
     <!-- Блок легенды -->
     <div class="map-overlay" id="legend"></div>
     <!-- Блок информации о строении -->
-    <div id="popupData"><p>Нажмите на строение для получения информации о нём</p></div>
+    <div id="popupData">Нажмите на строение для получения информации о нём</div>
+    <!-- Кнопка геолокации -->
+    <div id="geolocate-container"></div>
     <!-- Панель атрибутов -->
     <div id="attribution-block">
       <span
@@ -120,7 +122,7 @@
               // изменяем цвет по свойству
               "step",
               ["coalesce", ["get", "year_built_processed"], 0], // используем coalesce для замены null на 0
-              "#303030",
+              "#171717",
               1694,
               "#a52a2a",
               1850,
@@ -139,11 +141,17 @@
               "#9457EB",
             ],
             "fill-extrusion-height": [
-              "match",
-              ["typeof", ["get", "floors_processed"]],
-              "number",
-              ["*", ["get", "floors_processed"], 3], // средняя высота этажа - 3 метра
-              0, // Если значение "floors_processed" не является числом (null или неопределено), установить высоту в 0
+              "step",
+              ["zoom"],
+              0,
+              13,
+              [
+                "match",
+                ["typeof", ["get", "floors_processed"]],
+                "number",
+                ["*", ["get", "floors_processed"], 3],
+                0,
+              ],
             ],
           },
         });
@@ -158,11 +166,17 @@
           paint: {
             "fill-extrusion-color": "#171717",
             "fill-extrusion-height": [
-              "match",
-              ["typeof", ["get", "floors_processed"]],
-              "number",
-              ["*", ["get", "floors_processed"], 3], // средняя высота этажа - 3 метра
-              0, // Если значение "floors_processed" не является числом (null или неопределено), установить высоту в 0
+              "step",
+              ["zoom"],
+              0,
+              13,
+              [
+                "match",
+                ["typeof", ["get", "floors_processed"]],
+                "number",
+                ["*", ["get", "floors_processed"], 3],
+                0,
+              ],
             ],
           },
         });
@@ -214,131 +228,127 @@
         createLegend(steps, colors);
 
         // Наведение и получение информации по клику со зданий с возрастом
-        // Change the cursor to a pointer when the mouse is over the places layer.
         map.on("mouseenter", "buildings_pushkino_how_old_id", () => {
           map.getCanvas().style.cursor = "pointer";
         });
 
-        // Change it back to a pointer when it leaves.
+        // Возвращение курсора в изначальное состояние
         map.on("mouseleave", "buildings_pushkino_how_old_id", () => {
           map.getCanvas().style.cursor = "";
         });
 
-        map.on("click", "buildings_pushkino_how_old_id", (e) => {
-          // Copy coordinates array.
-          const address_processed_value = e.features[0].properties.address_processed;
-          const name_processed_value = e.features[0].properties.name_processed;
-          const year_built_processed_value = e.features[0].properties.year_built_processed;
-          const year_built_processed_source_value =
-            e.features[0].properties.year_built_processed_source;
-          const floors_processed_value = e.features[0].properties.floors_processed;
-          const floors_processed_source_value = e.features[0].properties.floors_processed_source;
-          const minculture_data_general_typologies_and_category_value =
-            e.features[0].properties.minculture_data_general_typologies_and_category;
-          const wikidata_item_value = e.features[0].properties.wikidata_item;
-          const wikidata_photo_value = e.features[0].properties.wikidata_photo;
-          const wikidata_wikipedia_url_value = e.features[0].properties.wikidata_wikipedia_url;
-          const wikidata_official_website_value =
-            e.features[0].properties.wikidata_official_website;
-
-          // Получаем ссылку на элемент, в который будем выводить данные
-          const popupDataElement = document.getElementById("popupData");
-
-          // Функция для обновления данных в элементе
-          function updatePopupData(data) {
-            popupDataElement.innerHTML = data;
-          }
-
-          // Переменная для хранения информации о строении
-          let buildingData = "";
-
-          if (address_processed_value) {
-            // проверяем, есть ли адрес, если да, то выводим его
-            buildingData += `<strong>Адрес:</strong> <span>${address_processed_value}</span><br>`;
-          }
-          if (name_processed_value) {
-            buildingData += `<strong>Имя:</strong> <span>${name_processed_value}</span><br>`;
-          }
-          if (wikidata_photo_value) {
-            buildingData += `<strong>Фото:</strong><br>`;
-            buildingData += `<img src="${wikidata_photo_value}" alt="Фото здания"><br>`;
-          }
-          if (year_built_processed_value) {
-            buildingData += `<strong>Год постройки:</strong> <span>${year_built_processed_value}</span> <span class="tooltip" title="Источник: ${year_built_processed_source_value}">i</span><br>`;
-          }
-          if (floors_processed_value) {
-            buildingData += `<strong>Количество этажей:</strong> <span>${floors_processed_value}</span> <span class="tooltip" title="Источник: ${floors_processed_source_value}">i</span> <br>`;
-          }
-          if (minculture_data_general_typologies_and_category_value) {
-            buildingData += `<strong>Культурный статус:</strong> <span>${minculture_data_general_typologies_and_category_value}</span><br>`;
-          }
-          if (wikidata_item_value) {
-            buildingData += `<strong><a href="${wikidata_item_value}" target="_blank">Ссылка на Wikidata</a></strong><br>`;
-          }
-          if (wikidata_wikipedia_url_value) {
-            buildingData += `<strong><a href="${wikidata_wikipedia_url_value}" target="_blank">Ссылка на Wikipedia</a></strong><br>`;
-          }
-          if (wikidata_official_website_value) {
-            buildingData += `<strong><a href="${wikidata_official_website_value}" target="_blank">Официальный сайт</a></strong><br>`;
-          }
-
-          updatePopupData(buildingData);
-
-          // Показать tooltip при клике на элементе с классом tooltip
-          document.querySelectorAll(".tooltip").forEach(function (element) {
-            element.addEventListener("click", function () {
-              // Переключаем класс для отображения/скрытия tooltip
-              this.classList.toggle("show-tooltip");
-            });
-          });
-        });
-
         // Наведение и получение информации по клику со зданий без возраста
-        // Change the cursor to a pointer when the mouse is over the places layer.
         map.on("mouseenter", "buildings_pushkino_how_old_id_null", () => {
           map.getCanvas().style.cursor = "pointer";
         });
 
-        // Change it back to a pointer when it leaves.
+        // Возвращение курсора в изначальное состояние
         map.on("mouseleave", "buildings_pushkino_how_old_id_null", () => {
           map.getCanvas().style.cursor = "";
         });
 
-        map.on("click", "buildings_pushkino_how_old_id_null", (e) => {
-          // Copy coordinates array.
-          const address_processed_value = e.features[0].properties.address_processed;
-          const floors_processed_value = e.features[0].properties.floors_processed;
-          const floors_processed_source_value = e.features[0].properties.floors_processed_source;
+        // Обработчик событий по клику
+        map.on("click", (e) => {
+          const features = map.queryRenderedFeatures(e.point); // получаем объекты под координатами клика
 
-          // Получаем ссылку на элемент, в который будем выводить данные
-          const popupDataElement = document.getElementById("popupData");
+          // Общие для всех сценариев функции и переменные
+          const popupDataElement = document.getElementById("popupData"); // получаем ссылку на элемент, в который будем выводить данные
 
-          // Функция для обновления данных в элементе
           function updatePopupData(data) {
+            // Функция для обновления данных в элементе
             popupDataElement.innerHTML = data;
           }
 
-          // Переменная для хранения информации о строении
-          let buildingData = "";
-
-          if (address_processed_value) {
-            // проверяем, есть ли адрес, если да, то выводим его
-            buildingData += `<strong>Адрес:</strong> <span>${address_processed_value}</span><br>`;
-          }
-          if (floors_processed_value) {
-            buildingData += `<strong>Количество этажей:</strong> <span>${floors_processed_value}</span> <span class="tooltip" title="Источник: ${floors_processed_source_value}">i</span> <br>`;
-          }
-
-          updatePopupData(buildingData);
-
-          // Показать tooltip при клике на элементе с классом tooltip
-          document.querySelectorAll(".tooltip").forEach(function (element) {
-            element.addEventListener("click", function () {
-              // Переключаем класс для отображения/скрытия tooltip
-              this.classList.toggle("show-tooltip");
+          function toggleTooltip() {
+            // Функция для пока tooltip'а не только при наведении, но и при клике
+            document.querySelectorAll(".tooltip").forEach(function (element) {
+              element.addEventListener("click", function () {
+                // Переключаем класс для отображения/скрытия tooltip
+                this.classList.toggle("show-tooltip");
+              });
             });
-          });
+          }
+
+          // Проверяем, есть ли объекты
+          if (features.length === 0) {
+            // Если нет, то
+            updatePopupData("Нажмите на строение для получения информации о нём");
+          } else {
+            // Если есть, то
+            const layerId = features[0].layer.id;
+
+            // Если объект из слоя с возрастом или без него
+            const address_processed_value = features[0].properties.address_processed;
+            const floors_processed_value = features[0].properties.floors_processed;
+            const floors_processed_source_value = features[0].properties.floors_processed_source;
+            let buildingData = "";
+
+            if (address_processed_value) {
+              // проверяем, есть ли адрес, если да, то выводим его
+              buildingData += `<strong>Адрес:</strong> <span>${address_processed_value}</span><br>`;
+            }
+            if (floors_processed_value) {
+              buildingData += `<strong>Количество этажей:</strong> <span>${floors_processed_value}</span> <span class="tooltip" title="Источник: ${floors_processed_source_value}">i</span> <br>`;
+            }
+
+            // Если объект из слоя с возрастом
+            if (layerId === "buildings_pushkino_how_old_id") {
+              const name_processed_value = features[0].properties.name_processed;
+              const year_built_processed_value = features[0].properties.year_built_processed;
+              const year_built_processed_source_value =
+                features[0].properties.year_built_processed_source;
+              const minculture_data_general_typologies_and_category_value =
+                features[0].properties.minculture_data_general_typologies_and_category;
+              const wikidata_item_value = features[0].properties.wikidata_item;
+              const wikidata_photo_value = features[0].properties.wikidata_photo;
+              const wikidata_wikipedia_url_value = features[0].properties.wikidata_wikipedia_url;
+              const wikidata_official_website_value =
+                features[0].properties.wikidata_official_website;
+
+              if (name_processed_value) {
+                buildingData += `<strong>Имя:</strong> <span>${name_processed_value}</span><br>`;
+              }
+              if (wikidata_photo_value) {
+                buildingData += `<strong>Фото:</strong><br>`;
+                buildingData += `<img src="${wikidata_photo_value}" alt="Фото здания"><br>`;
+              }
+              if (year_built_processed_value) {
+                buildingData += `<strong>Год постройки:</strong> <span>${year_built_processed_value}</span> <span class="tooltip" title="Источник: ${year_built_processed_source_value}">i</span><br>`;
+              }
+              if (minculture_data_general_typologies_and_category_value) {
+                buildingData += `<strong>Культурный статус:</strong> <span>${minculture_data_general_typologies_and_category_value}</span><br>`;
+              }
+              if (wikidata_item_value) {
+                buildingData += `<strong><a href="${wikidata_item_value}" target="_blank">Ссылка на Wikidata</a></strong><br>`;
+              }
+              if (wikidata_wikipedia_url_value) {
+                buildingData += `<strong><a href="${wikidata_wikipedia_url_value}" target="_blank">Ссылка на Wikipedia</a></strong><br>`;
+              }
+              if (wikidata_official_website_value) {
+                buildingData += `<strong><a href="${wikidata_official_website_value}" target="_blank">Официальный сайт</a></strong><br>`;
+              }
+            }
+            // Обновляем инфо-окно
+            updatePopupData(buildingData);
+            // Включаем возможность клика по tooltip
+            toggleTooltip();
+          }
         });
+
+        // Получаем контейнер кнопки геолокации
+        const geolocateContainer = document.getElementById("geolocate-container");
+
+        // Добавляем элемент управления в контейнер
+        geolocateContainer.appendChild(
+          // Добавляем кнопку поиска геопозиции
+          new mapboxgl.GeolocateControl({
+            positionOptions: {
+              enableHighAccuracy: true,
+            },
+            trackUserLocation: true, // автообновление позиции
+            showUserHeading: true, // стрелка направления движения
+          }).onAdd(map)
+        );
 
         // Показать tooltip при клике на элементе с классом tooltip-2
         document.querySelectorAll(".tooltip-2").forEach(function (element) {

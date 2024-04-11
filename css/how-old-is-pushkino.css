@@ -50,15 +50,18 @@ body {
 }
 @media screen and (max-width: 400px) {
   #legend {
-    width: 118px;
+    width: 108px;
   }
   #legend > div:first-child {
     margin-left: -6px; /* выравнивает текст по центру */
   }
-}
-
-#legend > div:first-child {
-  text-align: center; /* выравнивает текст по центру */
+  .map-overlay {
+    font-size: 12px;
+  }
+  .legend-key {
+    width: 12px;
+    height: 12px;
+  }
 }
 
 /* Стили блока информации и строении */
@@ -95,6 +98,14 @@ body {
 #popupData img {
   max-width: 200px;
   max-height: 150px;
+}
+
+/* Стили кнопки геолокации */
+#geolocate-container {
+  position: absolute;
+  top: 65px;
+  right: 15px;
+  z-index: 1;
 }
 
 /* Стили знака вопроса о данных */
