@@ -19,7 +19,7 @@ function slideOne() {
   // Вызываем функцию fillColor(), чтобы обновить фоновую линию слайдера
   fillColor();
   filterYearOne = [">=", ["number", ["get", "year_built_processed"]], parseInt(sliderOne.value)];
-  map.setFilter("buildings_pushkino_how_old_id", [
+  map.setFilter("buildings_pushkino_how_old_is_id", [
     "all",
     filterNotEmpty,
     filterYearOne,
@@ -33,7 +33,7 @@ function slideTwo() {
   displayValTwo.textContent = sliderTwo.value;
   fillColor();
   filterYearTwo = ["<=", ["number", ["get", "year_built_processed"]], parseInt(sliderTwo.value)];
-  map.setFilter("buildings_pushkino_how_old_id", [
+  map.setFilter("buildings_pushkino_how_old_is_id", [
     "all",
     filterNotEmpty,
     filterYearOne,
