@@ -6,4 +6,4 @@
 2. Сохранены комментарии
 
 Подробно о сборе данных и их обработке написано здесь: <br> [https://truespearmint.notion.site/a72277521db146c98f0c04ea38b6321a?pvs=4](https://www.notion.so/a72277521db146c98f0c04ea38b6321a?pvs=21) <br>
-О публикации сайта с помощью GeoServer`a расписал тут: <br> [https://truespearmint.notion.site/GeoServer-53acce8af6364604897317a369d39161?pvs=4](https://www.notion.so/GeoServer-53acce8af6364604897317a369d39161?pvs=21)
+О публикации сайта с помощью GeoServer`a расписал тут: <br> https://habr.com/ru/articles/820169
